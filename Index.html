@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stockroom — Year-End Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f5f2ed;
+  --surface: #ffffff;
+  --surface2: #ede9e2;
+  --border: #d6d0c6;
+  --border2: #c5bfb4;
+  --text: #1e1c18;
+  --muted: #7a7568;
+  --accent: #c2440e;
+  --accent-light: #fdf0eb;
+  --accent2: #2d6a4f;
+  --accent2-light: #e8f5f0;
+  --warn: #b45309;
+  --warn-light: #fef3c7;
+  --blue: #1d4ed8;
+  --blue-light: #eff6ff;
+  --purple: #6d28d9;
+  --purple-light: #f5f3ff;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; font-size: 14px; min-height: 100vh; }
+
+/* USER LOGIN SCREEN */
+#loginScreen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px);
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 48px;
+  width: 420px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.login-card h1 { font-family: 'Syne', sans-serif; font-size: 30px; color: var(--accent); margin-bottom: 4px; }
+.login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.login-card .year-badge {
+  display: inline-block;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+}
+.login-section { text-align: left; margin-bottom: 20px; }
+.login-section label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 6px; }
+.login-section input, .login-section select {
+  width: 100%; padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px; font-family: 'Nunito', sans-serif;
+  background: var(--surface); color: var(--text);
+  outline: none; transition: border-color .2s;
+}
+.login-section input:focus, .login-section select:focus { border-color: var(--accent); }
+.user-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.user-chip {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 12px; cursor: pointer;
+  background: var(--surface2); color: var(--text);
+  transition: all .15s;
+}
+.user-chip:hover, .user-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-login {
+  width: 100%; padding: 12px;
+  background: var(--accent); color: white;
+  border: none; border-radius: var(--radius);
+  font-size: 15px; font-family: 'Syne', sans-serif;
+  font-weight: 700; cursor: pointer; letter-spacing: .5px;
+  transition: background .15s;
+}
+.btn-login:hover { background: #a8390b; }
+
+/* MAIN APP */
+#app { display: none; min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: var(--text);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; }
+.logo .yr { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #888; letter-spacing: 2px; font-weight: 400; }
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1); color: #fff;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: background .15s;
+}
+.user-pill:hover { background: rgba(255,255,255,0.18); }
+.user-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; }
+
+/* TABS */
+.tabs {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 0;
+  padding: 0 28px;
+  overflow-x: auto;
+}
+.tab {
+  padding: 13px 18px;
+  font-size: 13px; font-weight: 600;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: color .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab .tab-badge {
+  background: var(--accent); color: white;
+  font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+  padding: 1px 5px; border-radius: 10px; font-weight: 700;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 1px; background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stat-card { background: var(--surface); padding: 14px 20px; }
+.stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px; }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--text); }
+.stat-val.accent { color: var(--accent); }
+.stat-val.green { color: var(--accent2); }
+.stat-val.warn { color: var(--warn); }
+
+/* TAB PANELS */
+.tab-panel { display: none; padding: 24px 28px; }
+.tab-panel.active { display: block; }
+
+/* TOOLBAR */
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.search-wrap { position: relative; flex: 1; min-width: 200px; }
+.search-wrap input {
+  width: 100%; padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 13px;
+  background: var(--surface); color: var(--text); outline: none; transition: border-color .2s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+select.filter-sel {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 13px;
+  background: var(--surface); color: var(--text); outline: none; cursor: pointer;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 8px 16px; border-radius: var(--radius);
+  font-size: 13px; font-family: 'Nunito', sans-serif; font-weight: 600;
+  cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .15s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #a8390b; }
+.btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-green { background: var(--accent2); color: white; }
+.btn-green:hover { background: #235c42; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 6px 8px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); cursor: pointer; transition: all .15s; font-size: 13px; }
+.btn-icon:hover { color: var(--accent); border-color: var(--accent); }
+.btn-icon.danger:hover { color: #dc2626; border-color: #dc2626; }
+
+/* TABLE */
+.table-container {
+  border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.table-scroll { overflow-x: auto; width: 100%; }
+table { width: 100%; border-collapse: collapse; min-width: 800px; }
+thead { background: var(--surface2); }
+th {
+  padding: 10px 14px; text-align: left;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+  white-space: nowrap; cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+th:hover { color: var(--accent); }
+th.sorted { color: var(--accent); }
+tbody tr { border-top: 1px solid var(--border); transition: background .1s; }
+tbody tr:hover { background: #faf9f7; }
+td { padding: 10px 14px; vertical-align: middle; }
+.cell-name { font-weight: 600; font-size: 13px; }
+.cell-sub { font-size: 11px; color: var(--muted); margin-top: 1px; font-family: 'IBM Plex Mono', monospace; }
+.cell-mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.cell-value { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent2); font-weight: 600; }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap; font-weight: 500;
+}
+.badge-loc { background: var(--blue-light); color: var(--blue); }
+.badge-low { background: #fee2e2; color: #dc2626; }
+.badge-ok { background: var(--accent2-light); color: var(--accent2); }
+.badge-warn { background: var(--warn-light); color: var(--warn); }
+.badge-var-ok { background: var(--accent2-light); color: var(--accent2); }
+.badge-var-off { background: #fee2e2; color: #dc2626; }
+.badge-var-close { background: var(--warn-light); color: var(--warn); }
+.badge-purple { background: var(--purple-light); color: var(--purple); }
+
+/* LOCATION DOT */
+.loc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+/* ROW ACTIONS */
+.row-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+tbody tr:hover .row-actions { opacity: 1; }
+
+/* COUNT TABLE SPECIFICS */
+.count-indicator {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+}
+.ci-done { background: var(--accent2-light); color: var(--accent2); }
+.ci-pending { background: var(--surface2); color: var(--muted); border: 1px dashed var(--border); }
+.ci-partial { background: var(--warn-light); color: var(--warn); }
+
+/* MOVEMENT TIMELINE */
+.movement-log { display: flex; flex-direction: column; gap: 0; }
+.move-item {
+  display: flex; gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.move-item:last-child { border-bottom: none; }
+.move-timeline { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }
+.move-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.move-line { width: 2px; flex: 1; background: var(--border); min-height: 20px; }
+.move-content { flex: 1; }
+.move-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.move-item-name { font-weight: 600; font-size: 13px; }
+.move-arrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.move-arrow .arrow { color: var(--accent); }
+.move-meta { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.move-note { font-size: 12px; color: var(--text); margin-top: 3px; background: var(--surface2); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 300;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 28px;
+  width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  animation: pop .2s ease;
+}
+@keyframes pop { from { transform: scale(.96) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal h2 { font-family: 'Syne', sans-serif; font-size: 20px; margin-bottom: 20px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.field input, .field select, .field textarea {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 13px;
+  background: var(--surface); color: var(--text); outline: none; transition: border-color .2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.modal-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.modal-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
+
+/* COUNT ENTRY SECTION */
+.count-entry-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-top: 10px;
+}
+.count-entry-box h4 { font-size: 12px; font-weight: 700; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'IBM Plex Mono', monospace; }
+.count-meta { font-size: 11px; color: var(--muted); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+.variance-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 10px; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; opacity: .4; }
+.empty-state p { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+.empty-state small { font-size: 12px; }
+
+/* LOCATION COLORS */
+.loc-gift { background: #e0f2fe; color: #0369a1; }
+.loc-back { background: #f3e8ff; color: #7c3aed; }
+.loc-conex { background: #ffedd5; color: #c2410c; }
+.loc-tent { background: #dcfce7; color: #15803d; }
+.loc-offsite { background: #fef9c3; color: #a16207; }
+.loc-none { background: var(--surface2); color: var(--muted); }
+
+/* HISTORY MINI */
+.loc-history { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.loc-hist-item { font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--surface2); color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+/* REPORT */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.report-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: var(--shadow); }
+.rc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px; }
+.rc-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
+.section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.cat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cat-name { flex: 1; font-size: 13px; font-weight: 500; }
+.cat-bar-wrap { flex: 2; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.cat-bar { height: 100%; border-radius: 3px; background: var(--accent); transition: width .5s; }
+.cat-val { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent2); min-width: 90px; text-align: right; font-weight: 600; }
+
+/* BARCODE SCANNER */
+#scannerModal .modal { width: 580px; }
+.scan-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; }
+.scan-tab-btn {
+  flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 600;
+  font-family: 'Nunito', sans-serif; cursor: pointer; border: none;
+  background: var(--surface2); color: var(--muted); transition: all .15s;
+}
+.scan-tab-btn.active { background: var(--accent); color: white; }
+.scan-tab-btn:not(:last-child) { border-right: 1px solid var(--border); }
+.scan-panel { display: none; }
+.scan-panel.active { display: block; }
+
+/* Camera panel */
+#scannerOverlay {
+  position: relative; width: 100%; max-width: 480px;
+  margin: 0 auto; border-radius: 8px; overflow: hidden;
+  background: #000; aspect-ratio: 4/3;
+}
+#scannerVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+#scannerCanvas { display: none; }
+.scan-line {
+  position: absolute; left: 10%; right: 10%; height: 2px;
+  background: var(--accent); opacity: .9;
+  animation: scanMove 1.8s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}
+@keyframes scanMove { 0%{top:18%} 50%{top:76%} 100%{top:18%} }
+.scan-corners::before, .scan-corners::after,
+.scan-corners > span::before, .scan-corners > span::after {
+  content:''; position:absolute; width:22px; height:22px;
+  border-color:white; border-style:solid; opacity:.75;
+}
+.scan-corners::before  { top:8%;    left:8%;   border-width:3px 0 0 3px; }
+.scan-corners::after   { top:8%;    right:8%;  border-width:3px 3px 0 0; }
+.scan-corners>span::before { bottom:8%; left:8%;   border-width:0 0 3px 3px; }
+.scan-corners>span::after  { bottom:8%; right:8%;  border-width:0 3px 3px 0; }
+#cameraStatus {
+  margin-top:10px; font-size:12px; color:var(--muted);
+  font-family:'IBM Plex Mono',monospace; text-align:center; min-height:18px;
+}
+
+/* USB scanner panel */
+.usb-scan-box {
+  background: var(--surface2); border: 2px dashed var(--border2);
+  border-radius: 10px; padding: 28px 20px; text-align: center;
+  transition: border-color .2s;
+}
+.usb-scan-box.focused { border-color: var(--accent); background: var(--accent-light); }
+.usb-scan-icon { font-size: 40px; margin-bottom: 10px; }
+.usb-scan-box h3 { font-family:'Syne',sans-serif; font-size:16px; margin-bottom:6px; }
+.usb-scan-box p { font-size:12px; color:var(--muted); margin-bottom:16px; }
+#usbInput {
+  width:100%; padding:11px 14px; text-align:center;
+  border:2px solid var(--border); border-radius:var(--radius);
+  font-family:'IBM Plex Mono',monospace; font-size:18px; letter-spacing:3px;
+  background:var(--surface); color:var(--text); outline:none;
+  transition:border-color .2s;
+}
+#usbInput:focus { border-color:var(--accent); }
+#usbInput::placeholder { letter-spacing:1px; font-size:13px; color:var(--muted); }
+
+/* Manual panel */
+#scanManualWrap { display:flex; gap:8px; }
+#scanManualInput {
+  flex:1; padding:10px 14px;
+  border:1px solid var(--border); border-radius:var(--radius);
+  font-family:'IBM Plex Mono',monospace; font-size:14px;
+  background:var(--surface); color:var(--text); outline:none;
+}
+#scanManualInput:focus { border-color:var(--accent); }
+
+/* Result */
+#scanResult {
+  margin-top:14px; padding:11px 15px;
+  border-radius:var(--radius); font-size:13px;
+  font-family:'Nunito',sans-serif; display:none; line-height:1.5;
+}
+#scanResult.found    { background:var(--accent2-light); color:var(--accent2); border:1px solid #a7f3d0; }
+#scanResult.notfound { background:var(--warn-light); color:var(--warn); border:1px solid #fcd34d; }
+#scanResult.error    { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+.scan-purpose-label {
+  font-size:11px; color:var(--muted); font-family:'IBM Plex Mono',monospace;
+  text-transform:uppercase; letter-spacing:1.2px; margin-bottom:14px; display:block;
+}
+/* TOAST */
+#toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(70px);
+  background: var(--text); color: #fff;
+  padding: 10px 20px; border-radius: 20px; font-size: 13px;
+  z-index: 999; transition: transform .3s ease; pointer-events: none; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* PRINT */
+@media print {
+  header, .tabs, .toolbar, .row-actions, #toast, .btn, button { display: none !important; }
+  .tab-panel { display: block !important; padding: 0 !important; }
+  body { background: white; }
+}
+
+/* ── MOBILE ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Login */
+  .login-card { padding: 28px 20px; width: 95vw; }
+
+  /* Header — collapse export/import into a "⋯" menu */
+  header { padding: 0 14px; height: 48px; }
+  .logo { font-size: 16px; }
+  .logo .yr { display: none; }
+  .header-desktop { display: none !important; }
+  .header-mobile { display: flex !important; }
+  .user-pill { padding: 5px 10px; font-size: 11px; }
+
+  /* Tabs: smaller text, equal-width, full scroll */
+  .tabs { padding: 0 0 0 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 11px 12px; font-size: 12px; gap: 4px; }
+
+  /* Stats: 2-column grid on mobile */
+  .stats-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .stat-card { padding: 10px 14px; }
+  .stat-val { font-size: 20px; }
+  .stat-label { font-size: 9px; }
+
+  /* Tab panels */
+  .tab-panel { padding: 14px 12px; }
+
+  /* Toolbar stacks vertically */
+  .toolbar { gap: 8px; }
+  .toolbar > .search-wrap { min-width: 0; width: 100%; }
+  .toolbar select.filter-sel { flex: 1; font-size: 12px; padding: 8px 10px; }
+  .toolbar > div[style*="margin-left:auto"] { width: 100%; }
+  .toolbar > div[style*="margin-left:auto"] .btn { width: 100%; justify-content: center; }
+
+  /* Modal: full-screen on mobile */
+  .modal { width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; max-height: 90vh; overflow-y: auto; animation: slideFromBottom .25s ease; }
+  .modal-overlay.open { align-items: flex-end; }
+  @keyframes slideFromBottom { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-grid .full { grid-column: 1 !important; }
+
+  /* Movement list */
+  .move-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Report grid */
+  .report-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  #reportContent > div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; display: block !important; }
+  #reportContent > div[style*="grid-template-columns:1fr 1fr"] > div:first-child { margin-bottom: 20px; }
+
+  /* Toast above bottom nav area */
+  #toast { bottom: 28px; font-size: 12px; max-width: 90vw; text-align: center; white-space: normal; }
+}
+
+/* Tablet mid-range */
+@media (max-width: 900px) and (min-width: 641px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr) !important; }
+  .tab-panel { padding: 18px 16px; }
+  header { padding: 0 16px; }
+  .tabs { padding: 0 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>Stockroom</h1>
+    <div class="year-badge">YEAR-END INVENTORY · <span id="loginYear"></span></div>
+    <p class="sub">Sign in to begin counting</p>
+    <div class="login-section">
+      <label>Your Name</label>
+      <input id="loginName" type="text" placeholder="Enter your name…" autocomplete="off"/>
+    </div>
+    <div class="login-section" id="knownUsersSection" style="display:none;">
+      <label>Or pick a returning user</label>
+      <div class="user-chips" id="userChips"></div>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Enter Inventory System →</button>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ───────────────────────────────────────────── -->
+<div id="app">
+  <header>
+    <div class="logo">Stockroom <span class="yr">YEAR-END</span></div>
+    <!-- Desktop actions -->
+    <div class="header-desktop" style="display:flex;gap:10px;align-items:center;">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);" onclick="exportData()">⬇ Export</button>
+      <label class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);cursor:pointer;">⬆ Import<input type="file" accept=".json" style="display:none" onchange="importData(event)"/></label>
+      <div class="user-pill" onclick="switchUser()">
+        <div class="user-dot"></div>
+        <span id="currentUserLabel">—</span>
+        <span style="color:#888;font-size:11px;margin-left:2px;">▾</span>
+      </div>
+    </div>
+    <!-- Mobile actions -->
+    <div class="header-mobile" style="display:none;gap:8px;align-items:center;">
+      <div class="user-pill" onclick="switchUser()" style="padding:5px 10px;">
+        <div class="user-dot"></div>
+        <span id="currentUserLabelMobile">—</span>
+      </div>
+      <button onclick="toggleMobileMenu()" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 10px;font-size:18px;cursor:pointer;line-height:1;">⋯</button>
+    </div>
+  </header>
+  <!-- Mobile dropdown menu -->
+  <div id="mobileMenu" style="display:none;position:fixed;top:48px;right:0;left:0;z-index:99;background:var(--text);border-bottom:1px solid rgba(255,255,255,0.1);padding:12px 16px;gap:10px;flex-direction:column;">
+    <button class="btn" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);width:100%;justify-content:center;" onclick="exportData();toggleMobileMenu()">⬇ Export Data</button>
+    <label class="btn" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);width:100%;justify-content:center;cursor:pointer;">⬆ Import Data<input type="file" accept=".json" style="display:none" onchange="importData(event);toggleMobileMenu()"/></label>
+  </div>
+
+  <nav class="tabs">
+    <div class="tab active" onclick="showTab('inventory')" id="tab-inventory">📦 Inventory</div>
+    <div class="tab" onclick="showTab('counts')" id="tab-counts">🔢 Year-End Counts <span class="tab-badge" id="badge-counts" style="display:none">0</span></div>
+    <div class="tab" onclick="showTab('movements')" id="tab-movements">🔄 Movements</div>
+    <div class="tab" onclick="showTab('report')" id="tab-report">📊 Report</div>
+    <div class="tab" onclick="showTab('countsheet')" id="tab-countsheet">🖨 Count Sheet</div>
+  </nav>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- ─── INVENTORY TAB ─────────────────────────────────── -->
+  <div class="tab-panel active" id="panel-inventory">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="invSearch" placeholder="Search name, SKU, category…" oninput="renderInventory()"/>
+      </div>
+      <select class="filter-sel" id="invCatFilter" onchange="renderInventory()">
+        <option value="">All Categories</option>
+      </select>
+      <select class="filter-sel" id="invLocFilter" onchange="renderInventory()">
+        <option value="">All Locations</option>
+        <option value="Gift Shop">Gift Shop</option>
+        <option value="Backroom">Backroom</option>
+        <option value="Conex">Conex</option>
+        <option value="Tent">Tent</option>
+        <option value="Offsite Storage">Offsite Storage</option>
+      </select>
+      <span id="invCount" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;"></span>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn btn-secondary" onclick="openScanner('inventory')" title="Scan barcode to find item">📷 Scan</button>
+      <button class="btn btn-primary" onclick="openItemModal()">+ Add Item</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th onclick="sortInv('name')">Name <span id="sinv-name">↕</span></th>
+            <th onclick="sortInv('sku')">SKU <span id="sinv-sku">↕</span></th>
+            <th onclick="sortInv('category')">Category <span id="sinv-category">↕</span></th>
+            <th onclick="sortInv('currentLocation')">Location <span id="sinv-currentLocation">↕</span></th>
+            <th onclick="sortInv('quantity')">Book Qty <span id="sinv-quantity">↕</span></th>
+            <th onclick="sortInv('unitPrice')">Unit Price <span id="sinv-unitPrice">↕</span></th>
+            <th onclick="sortInv('totalValue')">Total Value <span id="sinv-totalValue">↕</span></th>
+            <th>Stock</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── COUNTS TAB ────────────────────────────────────── -->
+  <div class="tab-panel" id="panel-counts">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="cntSearch" placeholder="Search items…" oninput="renderCounts()"/>
+      </div>
+      <select class="filter-sel" id="cntLocFilter" onchange="renderCounts()">
+        <option value="">All Locations</option>
+        <option value="Gift Shop">Gift Shop</option>
+        <option value="Backroom">Backroom</option>
+        <option value="Conex">Conex</option>
+        <option value="Tent">Tent</option>
+        <option value="Offsite Storage">Offsite Storage</option>
+      </select>
+      <select class="filter-sel" id="cntStatusFilter" onchange="renderCounts()">
+        <option value="">All Statuses</option>
+        <option value="complete">Both Counts Done</option>
+        <option value="partial">First Count Only</option>
+        <option value="pending">Not Started</option>
+        <option value="variance">Has Variance</option>
+      </select>
+      <span id="cntCount" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;"></span>
+      <div style="margin-left:auto;">
+        <button class="btn btn-secondary" onclick="openScanner('count')" title="Scan barcode to count item">📷 Scan to Count</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>Item</th>
+            <th>Location</th>
+            <th>Book Qty</th>
+            <th>1st Count</th>
+            <th>Counted By</th>
+            <th>2nd Count</th>
+            <th>Counted By</th>
+            <th>Variance</th>
+            <th>Status</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="cntBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MOVEMENTS TAB ─────────────────────────────────── -->
+  <div class="tab-panel" id="panel-movements">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="movSearch" placeholder="Search item or location…" oninput="renderMovements()"/>
+      </div>
+      <select class="filter-sel" id="movLocFilter" onchange="renderMovements()">
+        <option value="">All Locations</option>
+        <option value="Gift Shop">Gift Shop</option>
+        <option value="Backroom">Backroom</option>
+        <option value="Conex">Conex</option>
+        <option value="Tent">Tent</option>
+        <option value="Offsite Storage">Offsite Storage</option>
+      </select>
+      <div style="margin-left:auto;">
+        <button class="btn btn-primary" onclick="openMoveModal()">+ Log Movement</button>
+      </div>
+    </div>
+    <div id="movList" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;"></div>
+  </div>
+
+  <!-- ─── REPORT TAB ────────────────────────────────────── -->
+  <div class="tab-panel" id="panel-report">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:'Syne',sans-serif;font-size:22px;">Year-End Summary Report</h2>
+      <button class="btn btn-secondary" onclick="printReport()">🖨 Print</button>
+    </div>
+    <div id="reportContent"></div>
+  </div>
+
+  <!-- ─── COUNT SHEET TAB ───────────────────────────────────── -->
+  <div class="tab-panel" id="panel-countsheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <h2 style="font-family:'Syne',sans-serif;font-size:22px;">Printable Count Sheet</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select class="filter-sel" id="cs-locFilter" onchange="buildCountSheet()">
+          <option value="">All Locations</option>
+          <option>Gift Shop</option><option>Backroom</option>
+          <option>Conex</option><option>Tent</option><option>Offsite Storage</option>
+        </select>
+        <select class="filter-sel" id="cs-catFilter" onchange="buildCountSheet()">
+          <option value="">All Categories</option>
+        </select>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);">
+          <input type="checkbox" id="cs-showImages" onchange="buildCountSheet()" checked style="accent-color:var(--accent);"/> Show Photos
+        </label>
+        <button class="btn btn-primary" onclick="printCountSheet()">🖨 Print Count Sheet</button>
+      </div>
+    </div>
+    <div id="countSheetPreview"></div>
+  </div>
+</div>
+
+<!-- ─── BARCODE SCANNER MODAL ──────────────────────────────── -->
+<div class="modal-overlay" id="scannerModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <h2 style="margin:0;">📷 Scan Barcode</h2>
+      <button class="btn-icon" onclick="closeScanner()">✕</button>
+    </div>
+    <span id="scanPurposeLabel" class="scan-purpose-label">Searching inventory…</span>
+
+    <!-- Mode tabs -->
+    <div class="scan-tabs">
+      <button class="scan-tab-btn active" id="stab-camera" onclick="switchScanTab('camera')">📷 Camera</button>
+      <button class="scan-tab-btn" id="stab-usb" onclick="switchScanTab('usb')">🔌 USB / Bluetooth Scanner</button>
+      <button class="scan-tab-btn" id="stab-manual" onclick="switchScanTab('manual')">⌨ Manual Entry</button>
+    </div>
+
+    <!-- Camera panel -->
+    <div class="scan-panel active" id="spanel-camera">
+      <div id="scannerOverlay">
+        <video id="scannerVideo" autoplay playsinline muted></video>
+        <canvas id="scannerCanvas"></canvas>
+        <div class="scan-line"></div>
+        <div class="scan-corners"><span></span></div>
+      </div>
+      <div id="cameraStatus">Starting camera…</div>
+    </div>
+
+    <!-- USB / Bluetooth scanner panel -->
+    <div class="scan-panel" id="spanel-usb">
+      <div class="usb-scan-box" id="usbBox">
+        <div class="usb-scan-icon">🔌</div>
+        <h3>USB / Bluetooth Barcode Scanner</h3>
+        <p>Click the box below, then scan with your handheld scanner.<br/>Most scanners send the barcode as keystrokes automatically.</p>
+        <input id="usbInput" type="text" placeholder="Click here, then scan…" 
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               onfocus="document.getElementById('usbBox').classList.add('focused')"
+               onblur="document.getElementById('usbBox').classList.remove('focused')"
+               oninput="handleUsbInput(this.value)"
+               onkeydown="if(event.key==='Enter'){lookupBarcode(this.value.trim());this.value='';}" />
+      </div>
+    </div>
+
+    <!-- Manual entry panel -->
+    <div class="scan-panel" id="spanel-manual">
+      <div style="margin-bottom:10px;font-size:13px;color:var(--muted);">Type or paste a UPC, SKU, or Style Number to look up an item.</div>
+      <div id="scanManualWrap">
+        <input id="scanManualInput" type="text" placeholder="e.g. 012345678901 or HAT-001"
+               onkeydown="if(event.key==='Enter') lookupBarcode(this.value.trim())"/>
+        <button class="btn btn-primary" onclick="lookupBarcode(document.getElementById('scanManualInput').value.trim())">Search</button>
+      </div>
+    </div>
+
+    <div id="scanResult"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeScanner()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ITEM MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="itemModalTitle">Add Item</h2>
+
+    <!-- Image upload -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;">Product Photo</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="imgPreviewWrap" style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('f-image').click()">
+          <img id="imgPreview" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:6px;"/>
+          <span id="imgPlaceholder" style="font-size:24px;opacity:.3;">📷</span>
+        </div>
+        <div style="flex:1;">
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;">📁 Choose Photo<input type="file" id="f-image" accept="image/*" style="display:none" onchange="previewImage(event)"/></label>
+          <button class="btn btn-sm" style="border:1px solid var(--border);background:transparent;color:var(--muted);margin-left:6px;" onclick="clearImage()" id="clearImgBtn" style="display:none">✕ Remove</button>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">JPG, PNG — stored locally with your data</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-title" style="margin-bottom:12px;">Item Details</div>
+    <div class="form-grid">
+      <div class="field full"><label>Item Name *</label><input id="f-name" type="text" placeholder="e.g. Logo Hat — Khaki / SM"/></div>
+      <div class="field"><label>SKU</label><input id="f-sku" type="text" placeholder="e.g. HAT-001"/></div>
+      <div class="field"><label>UPC / Barcode</label><input id="f-upc" type="text" placeholder="e.g. 012345678901"/></div>
+      <div class="field"><label>Style Number</label><input id="f-style" type="text" placeholder="e.g. STY-2024-A"/></div>
+      <div class="field"><label>Color</label><input id="f-color" type="text" placeholder="e.g. Khaki, Black, Red…"/></div>
+      <div class="field"><label>Size</label><input id="f-size" type="text" placeholder="e.g. S, M, L, XL, One Size…"/></div>
+      <div class="field"><label>Category</label><input id="f-category" type="text" placeholder="e.g. Hats, Shirts…"/></div>
+      <div class="field"><label>Current Location</label>
+        <select id="f-location">
+          <option value="">— Select —</option>
+          <option>Gift Shop</option><option>Backroom</option>
+          <option>Conex</option><option>Tent</option><option>Offsite Storage</option>
+        </select>
+      </div>
+      <div class="field"><label>Book Quantity *</label><input id="f-quantity" type="number" min="0" placeholder="0"/></div>
+      <div class="field"><label>Unit Price ($) *</label><input id="f-unitPrice" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+      <div class="field"><label>Low Stock Threshold</label><input id="f-threshold" type="number" min="0" placeholder="10"/></div>
+      <div class="field full"><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Optional notes…" style="resize:vertical"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('itemModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── COUNT MODAL ────────────────────────────────────────── -->
+<div class="modal-overlay" id="countModal">
+  <div class="modal">
+    <h2>Enter Count — <span id="cntItemName" style="color:var(--accent)"></span></h2>
+    <input type="hidden" id="cntItemId"/>
+    <!-- Item summary with photo -->
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);">
+      <img id="cntItemImg" src="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:none;flex-shrink:0;"/>
+      <div id="cntItemImgPlaceholder" style="width:64px;height:64px;border-radius:6px;border:1px dashed var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;opacity:.4;">📦</div>
+      <div style="flex:1;min-width:0;">
+        <div id="cntItemMeta" style="font-size:12px;color:var(--muted);line-height:1.9;font-family:'IBM Plex Mono',monospace;"></div>
+      </div>
+    </div>
+
+    <div class="count-entry-box">
+      <h4>First Count</h4>
+      <div class="form-grid">
+        <div class="field"><label>Count Qty</label><input id="cnt-first-qty" type="number" min="0" placeholder="—"/></div>
+        <div class="field"><label>Counted By</label>
+          <select id="cnt-first-user"><option value="">— Select —</option></select>
+        </div>
+      </div>
+      <div class="count-meta" id="cnt-first-meta"></div>
+    </div>
+
+    <div class="count-entry-box" style="margin-top:10px;">
+      <h4>Second Count</h4>
+      <div class="form-grid">
+        <div class="field"><label>Count Qty</label><input id="cnt-second-qty" type="number" min="0" placeholder="—"/></div>
+        <div class="field"><label>Counted By</label>
+          <select id="cnt-second-user"><option value="">— Select —</option></select>
+        </div>
+      </div>
+      <div class="count-meta" id="cnt-second-meta"></div>
+    </div>
+
+    <div class="variance-row" id="varianceRow" style="display:none;">
+      <span style="font-size:12px;font-weight:600;">Variance (2nd vs Book):</span>
+      <span id="varianceVal" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;"></span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('countModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCount()">Save Counts</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MOVEMENT MODAL ─────────────────────────────────────── -->
+<div class="modal-overlay" id="moveModal">
+  <div class="modal">
+    <h2>Log Movement</h2>
+    <div class="form-grid">
+      <div class="field full"><label>Item *</label>
+        <select id="mov-item" onchange="onMovItemChange()"><option value="">— Select item —</option></select>
+      </div>
+      <div class="field"><label>From Location</label><input id="mov-from" type="text" readonly style="background:var(--surface2);color:var(--muted);"/></div>
+      <div class="field"><label>To Location *</label>
+        <select id="mov-to">
+          <option value="">— Select —</option>
+          <option>Gift Shop</option><option>Backroom</option>
+          <option>Conex</option><option>Tent</option><option>Offsite Storage</option>
+        </select>
+      </div>
+      <div class="field full"><label>Moved By *</label>
+        <select id="mov-user"><option value="">— Select —</option></select>
+      </div>
+      <div class="field full"><label>Notes</label><input id="mov-notes" type="text" placeholder="Optional reason or notes…"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('moveModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMovement()">Log Movement</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────
+let state = {
+  currentUser: '',
+  users: [],
+  items: [],
+  counts: {},   // { itemId: { first: {qty,user,ts}, second: {qty,user,ts} } }
+  movements: [] // [{ id, itemId, fromLoc, toLoc, movedBy, ts, notes }]
+};
+let invSort = { col: 'name', dir: 1 };
+
+const LOCATIONS = ['Gift Shop','Backroom','Conex','Tent','Offsite Storage'];
+const LOC_CLASS = {
+  'Gift Shop':'loc-gift','Backroom':'loc-back','Conex':'loc-conex',
+  'Tent':'loc-tent','Offsite Storage':'loc-offsite',''  :'loc-none'
+};
+
+// ─── PERSISTENCE ───────────────────────────────────────────────
+function save() { localStorage.setItem('stockroom_v2', JSON.stringify(state)); }
+function load() {
+  try {
+    const raw = localStorage.getItem('stockroom_v2');
+    if (raw) { const s = JSON.parse(raw); state = { ...state, ...s }; }
+  } catch(e) {}
+}
+
+// ─── LOGIN ─────────────────────────────────────────────────────
+document.getElementById('loginYear').textContent = new Date().getFullYear();
+load();
+
+(function initLogin() {
+  if (state.users.length) {
+    document.getElementById('knownUsersSection').style.display = 'block';
+    renderUserChips();
+  }
+  document.getElementById('loginName').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+})();
+
+function renderUserChips() {
+  document.getElementById('userChips').innerHTML = state.users.map(u =>
+    `<div class="user-chip" onclick="selectChip('${esc(u)}')">${esc(u)}</div>`
+  ).join('');
+}
+function selectChip(name) {
+  document.getElementById('loginName').value = name;
+  document.querySelectorAll('.user-chip').forEach(c => c.classList.toggle('active', c.textContent===name));
+}
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  if (!name) { document.getElementById('loginName').focus(); return; }
+  state.currentUser = name;
+  if (!state.users.includes(name)) state.users.push(name);
+  save();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('currentUserLabel').textContent = name;
+  document.getElementById('currentUserLabelMobile').textContent = name;
+  fullRefresh();
+}
+function toggleMobileMenu() {
+  const m = document.getElementById('mobileMenu');
+  m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('mobileMenu');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target) && !e.target.closest('button[onclick="toggleMobileMenu()"]')) {
+    menu.style.display = 'none';
+  }
+});
+function switchUser() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  const menu = document.getElementById('mobileMenu');
+  if (menu) menu.style.display = 'none';
+  renderUserChips();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab==='report') buildReport();
+  if (tab==='countsheet') buildCountSheet();
+}
+
+// ─── FULL REFRESH ───────────────────────────────────────────────
+function fullRefresh() {
+  updateStats();
+  updateCategoryFilter();
+  renderInventory();
+  renderCounts();
+  renderMovements();
+  updateCountBadge();
+}
+
+// ─── STATS ─────────────────────────────────────────────────────
+function updateStats() {
+  const totalVal = state.items.reduce((s,i) => s+(+i.quantity||0)*(+i.unitPrice||0), 0);
+  const totalUnits = state.items.reduce((s,i) => s+(+i.quantity||0), 0);
+  const counted = Object.keys(state.counts).filter(id => state.counts[id]?.first).length;
+  const variance = Object.keys(state.counts).filter(id => {
+    const c = state.counts[id]; const item = state.items.find(i=>i.id===id);
+    if (!c?.second || !item) return false;
+    return Math.abs((+c.second.qty||0)-(+item.quantity||0)) > 0;
+  }).length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total SKUs</div><div class="stat-val">${state.items.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Units (Book)</div><div class="stat-val">${totalUnits.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">Inventory Value</div><div class="stat-val green">${fmt(totalVal)}</div></div>
+    <div class="stat-card"><div class="stat-label">Items Counted</div><div class="stat-val accent">${counted} / ${state.items.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Count Variances</div><div class="stat-val warn">${variance}</div></div>
+  `;
+}
+function updateCountBadge() {
+  const pending = state.items.filter(i => !state.counts[i.id]?.first).length;
+  const badge = document.getElementById('badge-counts');
+  badge.style.display = pending>0 ? '' : 'none';
+  badge.textContent = pending;
+}
+
+// ─── INVENTORY ─────────────────────────────────────────────────
+function updateCategoryFilter() {
+  const sel = document.getElementById('invCatFilter');
+  const cur = sel.value;
+  const cats = [...new Set(state.items.map(i=>i.category).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option>${esc(c)}</option>`).join('');
+  sel.value = cur;
+}
+
+let editItemId = null;
+function openItemModal(id) {
+  editItemId = id||null;
+  document.getElementById('itemModalTitle').textContent = id ? 'Edit Item' : 'Add Item';
+  const item = id ? state.items.find(i=>i.id===id) : {};
+  document.getElementById('f-name').value = item?.name||'';
+  document.getElementById('f-sku').value = item?.sku||'';
+  document.getElementById('f-upc').value = item?.upc||'';
+  document.getElementById('f-style').value = item?.styleNum||'';
+  document.getElementById('f-color').value = item?.color||'';
+  document.getElementById('f-size').value = item?.size||'';
+  document.getElementById('f-category').value = item?.category||'';
+  document.getElementById('f-quantity').value = item?.quantity??'';
+  document.getElementById('f-unitPrice').value = item?.unitPrice??'';
+  document.getElementById('f-location').value = item?.currentLocation||'';
+  document.getElementById('f-threshold').value = item?.threshold??'';
+  document.getElementById('f-notes').value = item?.notes||'';
+  // Image preview
+  const imgEl = document.getElementById('imgPreview');
+  const phEl = document.getElementById('imgPlaceholder');
+  if (item?.image) {
+    imgEl.src = item.image; imgEl.style.display='block'; phEl.style.display='none';
+  } else {
+    imgEl.src=''; imgEl.style.display='none'; phEl.style.display='block';
+  }
+  document.getElementById('f-image').value = '';
+  openModal('itemModal');
+  setTimeout(()=>document.getElementById('f-name').focus(),60);
+}
+function saveItem() {
+  const name = document.getElementById('f-name').value.trim();
+  const qty = document.getElementById('f-quantity').value;
+  const price = document.getElementById('f-unitPrice').value;
+  if (!name) { toast('Item name required.'); return; }
+  if (qty===''||isNaN(+qty)) { toast('Valid quantity required.'); return; }
+  if (price===''||isNaN(+price)) { toast('Valid unit price required.'); return; }
+  const loc = document.getElementById('f-location').value;
+  // Preserve existing image unless a new one was selected
+  const existingImg = editItemId ? (state.items.find(i=>i.id===editItemId)?.image||'') : '';
+  const imgEl = document.getElementById('imgPreview');
+  const newImg = imgEl.style.display!=='none' && imgEl.src && imgEl.src!==window.location.href ? imgEl.src : '';
+  const data = {
+    name, sku: document.getElementById('f-sku').value.trim(),
+    upc: document.getElementById('f-upc').value.trim(),
+    styleNum: document.getElementById('f-style').value.trim(),
+    color: document.getElementById('f-color').value.trim(),
+    size: document.getElementById('f-size').value.trim(),
+    category: document.getElementById('f-category').value.trim(),
+    quantity: +qty, unitPrice: +price,
+    currentLocation: loc, threshold: +document.getElementById('f-threshold').value||10,
+    notes: document.getElementById('f-notes').value.trim(),
+    image: newImg || existingImg
+  };
+  if (editItemId) {
+    const idx = state.items.findIndex(i=>i.id===editItemId);
+    const old = state.items[idx];
+    if (old.currentLocation !== loc && loc) {
+      state.movements.unshift({ id: genId(), itemId: editItemId, fromLoc: old.currentLocation||'Unassigned', toLoc: loc, movedBy: state.currentUser, ts: Date.now(), notes: 'Updated via Edit' });
+    }
+    state.items[idx] = { ...old, ...data };
+    toast('Item updated.');
+  } else {
+    const newItem = { id: genId(), ...data };
+    state.items.push(newItem);
+    if (loc) state.movements.unshift({ id: genId(), itemId: newItem.id, fromLoc: 'New', toLoc: loc, movedBy: state.currentUser, ts: Date.now(), notes: 'Initial location' });
+    toast('Item added.');
+  }
+  closeModal('itemModal'); save(); fullRefresh();
+}
+function deleteItem(id) {
+  if (!confirm('Delete this item? All counts and movement history will also be removed.')) return;
+  state.items = state.items.filter(i=>i.id!==id);
+  delete state.counts[id];
+  state.movements = state.movements.filter(m=>m.itemId!==id);
+  save(); fullRefresh(); toast('Item deleted.');
+}
+
+function sortInv(col) {
+  if (invSort.col===col) invSort.dir*=-1; else { invSort.col=col; invSort.dir=1; }
+  document.querySelectorAll('[id^="sinv-"]').forEach(el => el.textContent='↕');
+  const el = document.getElementById('sinv-'+col);
+  if (el) { el.closest('th').classList.add('sorted'); el.textContent = invSort.dir===1?'↑':'↓'; }
+  renderInventory();
+}
+
+function renderInventory() {
+  const q = document.getElementById('invSearch').value.toLowerCase();
+  const cat = document.getElementById('invCatFilter').value;
+  const loc = document.getElementById('invLocFilter').value;
+  let rows = state.items.filter(i => {
+    if (q && !`${i.name} ${i.sku} ${i.upc||''} ${i.styleNum||''} ${i.color||''} ${i.size||''} ${i.category}`.toLowerCase().includes(q)) return false;
+    if (cat && i.category!==cat) return false;
+    if (loc && i.currentLocation!==loc) return false;
+    return true;
+  }).sort((a,b) => {
+    let av=a[invSort.col], bv=b[invSort.col];
+    if (invSort.col==='totalValue') { av=(+a.quantity||0)*(+a.unitPrice||0); bv=(+b.quantity||0)*(+b.unitPrice||0); }
+    if (typeof av==='string') return av.localeCompare(bv)*invSort.dir;
+    return ((+av||0)-(+bv||0))*invSort.dir;
+  });
+  document.getElementById('invCount').textContent = rows.length+' item'+(rows.length!==1?'s':'');
+  const tbody = document.getElementById('invBody');
+  if (!rows.length) { tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📦</div><p>${state.items.length?'No items match.':'No items yet.'}</p><small>${state.items.length?'Try adjusting filters.':'Click "+ Add Item" to start.'}</small></div></td></tr>`; return; }
+  tbody.innerHTML = rows.map(item => {
+    const val = (+item.quantity||0)*(+item.unitPrice||0);
+    const st = (+item.quantity||0)<=(+item.threshold||10) ? 'low' : 'ok';
+    const locCls = LOC_CLASS[item.currentLocation||'']||'loc-none';
+    const prevLocs = [...new Set(state.movements.filter(m=>m.itemId===item.id).map(m=>m.fromLoc))].filter(l=>l&&l!=='New'&&l!==item.currentLocation).slice(0,4);
+    const thumb = item.image
+      ? `<img src="${item.image}" style="width:40px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--border);margin-right:8px;flex-shrink:0;" />`
+      : `<div style="width:40px;height:40px;border-radius:5px;border:1px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;margin-right:8px;flex-shrink:0;opacity:.4;">📦</div>`;
+    const variantTags = [item.color, item.size].filter(Boolean).map(v=>`<span style="background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;font-size:10px;font-family:'IBM Plex Mono',monospace;">${esc(v)}</span>`).join('');
+    return `<tr data-id="${item.id}">
+      <td style="min-width:200px;">
+        <div style="display:flex;align-items:center;">
+          ${thumb}
+          <div style="min-width:0;">
+            <div class="cell-name">${esc(item.name)}</div>
+            ${variantTags ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${variantTags}</div>` : ''}
+            ${item.notes?`<div class="cell-sub">${esc(item.notes)}</div>`:''}
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="cell-mono">${esc(item.sku||'—')}</div>
+        ${item.upc?`<div class="cell-sub">${esc(item.upc)}</div>`:''}
+        ${item.styleNum?`<div class="cell-sub">Style: ${esc(item.styleNum)}</div>`:''}
+      </td>
+      <td>${item.category?`<span class="badge" style="background:var(--surface2);color:var(--muted)">${esc(item.category)}</span>`:'—'}</td>
+      <td>
+        ${item.currentLocation?`<span class="badge ${locCls}">${esc(item.currentLocation)}</span>`:'<span style="color:var(--muted);font-size:12px;">—</span>'}
+        ${prevLocs.length?`<div class="loc-history">${prevLocs.map(l=>`<span class="loc-hist-item">${esc(l)}</span>`).join('')}</div>`:''}
+      </td>
+      <td class="cell-mono">${(+item.quantity||0).toLocaleString()}</td>
+      <td class="cell-mono">${fmt(item.unitPrice||0)}</td>
+      <td class="cell-value">${fmt(val)}</td>
+      <td><span class="badge ${st==='low'?'badge-low':'badge-ok'}">${st==='low'?'Low':'Normal'}</span></td>
+      <td><div class="row-actions">
+        <button class="btn-icon" onclick="openItemModal('${item.id}')" title="Edit">✏</button>
+        <button class="btn-icon" onclick="openCountModal('${item.id}')" title="Count">🔢</button>
+        <button class="btn-icon" onclick="openMoveModalFor('${item.id}')" title="Move">🔄</button>
+        <button class="btn-icon danger" onclick="deleteItem('${item.id}')" title="Delete">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── COUNTS ────────────────────────────────────────────────────
+function openCountModal(itemId) {
+  const item = state.items.find(i=>i.id===itemId);
+  if (!item) return;
+  document.getElementById('cntItemId').value = itemId;
+  document.getElementById('cntItemName').textContent = item.name;
+
+  // Show product image
+  const imgEl = document.getElementById('cntItemImg');
+  const phEl = document.getElementById('cntItemImgPlaceholder');
+  if (item.image) { imgEl.src=item.image; imgEl.style.display='block'; phEl.style.display='none'; }
+  else { imgEl.style.display='none'; phEl.style.display='flex'; }
+
+  // Item meta details
+  const meta = [
+    item.upc ? `UPC: ${item.upc}` : null,
+    item.styleNum ? `Style: ${item.styleNum}` : null,
+    item.color ? `Color: ${item.color}` : null,
+    item.size ? `Size: ${item.size}` : null,
+    `Book Qty: ${item.quantity}`,
+    item.currentLocation ? `Location: ${item.currentLocation}` : null,
+  ].filter(Boolean);
+  document.getElementById('cntItemMeta').innerHTML = meta.map(m=>`<span>${esc(m)}</span>`).join('<br/>');
+
+  // Populate user dropdowns
+  const userOpts = `<option value="">— Select —</option>` + state.users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  document.getElementById('cnt-first-user').innerHTML = userOpts;
+  document.getElementById('cnt-second-user').innerHTML = userOpts;
+
+  const existing = state.counts[itemId]||{};
+  if (existing.first) {
+    document.getElementById('cnt-first-qty').value = existing.first.qty;
+    document.getElementById('cnt-first-user').value = existing.first.user;
+    document.getElementById('cnt-first-meta').textContent = `Saved: ${fmtDate(existing.first.ts)}`;
+  } else {
+    document.getElementById('cnt-first-qty').value = '';
+    document.getElementById('cnt-first-user').value = state.currentUser||'';
+    document.getElementById('cnt-first-meta').textContent = '';
+  }
+  if (existing.second) {
+    document.getElementById('cnt-second-qty').value = existing.second.qty;
+    document.getElementById('cnt-second-user').value = existing.second.user;
+    document.getElementById('cnt-second-meta').textContent = `Saved: ${fmtDate(existing.second.ts)}`;
+  } else {
+    document.getElementById('cnt-second-qty').value = '';
+    document.getElementById('cnt-second-user').value = state.currentUser||'';
+    document.getElementById('cnt-second-meta').textContent = '';
+  }
+  updateVarianceRow(item.quantity);
+  document.getElementById('cnt-second-qty').oninput = ()=>updateVarianceRow(item.quantity);
+  openModal('countModal');
+}
+function updateVarianceRow(bookQty) {
+  const secQty = document.getElementById('cnt-second-qty').value;
+  const row = document.getElementById('varianceRow');
+  if (secQty==='') { row.style.display='none'; return; }
+  const v = (+secQty||0)-(+bookQty||0);
+  row.style.display='flex';
+  const el = document.getElementById('varianceVal');
+  el.textContent = (v>0?'+':'')+v+' units';
+  el.style.color = v===0 ? 'var(--accent2)' : Math.abs(v)<=3 ? 'var(--warn)' : '#dc2626';
+}
+function saveCount() {
+  const itemId = document.getElementById('cntItemId').value;
+  const firstQty = document.getElementById('cnt-first-qty').value;
+  const firstUser = document.getElementById('cnt-first-user').value;
+  const secondQty = document.getElementById('cnt-second-qty').value;
+  const secondUser = document.getElementById('cnt-second-user').value;
+  if (!state.counts[itemId]) state.counts[itemId] = {};
+  if (firstQty!=='') {
+    state.counts[itemId].first = { qty: +firstQty, user: firstUser||state.currentUser, ts: Date.now() };
+  }
+  if (secondQty!=='') {
+    state.counts[itemId].second = { qty: +secondQty, user: secondUser||state.currentUser, ts: Date.now() };
+  }
+  save(); closeModal('countModal'); fullRefresh(); toast('Count saved.');
+}
+
+function renderCounts() {
+  const q = document.getElementById('cntSearch').value.toLowerCase();
+  const loc = document.getElementById('cntLocFilter').value;
+  const status = document.getElementById('cntStatusFilter').value;
+  let rows = state.items.filter(item => {
+    if (q && !`${item.name} ${item.sku}`.toLowerCase().includes(q)) return false;
+    if (loc && item.currentLocation!==loc) return false;
+    if (status) {
+      const c = state.counts[item.id]||{};
+      const bookQty = +item.quantity||0;
+      if (status==='complete' && !(c.first && c.second)) return false;
+      if (status==='partial' && !(c.first && !c.second)) return false;
+      if (status==='pending' && c.first) return false;
+      if (status==='variance' && !(c.second && Math.abs((+c.second.qty||0)-bookQty)>0)) return false;
+    }
+    return true;
+  });
+  document.getElementById('cntCount').textContent = rows.length+' item'+(rows.length!==1?'s':'');
+  const tbody = document.getElementById('cntBody');
+  if (!rows.length) { tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔢</div><p>No items match.</p></div></td></tr>`; return; }
+  tbody.innerHTML = rows.map(item => {
+    const c = state.counts[item.id]||{};
+    const bookQty = +item.quantity||0;
+    const locCls = LOC_CLASS[item.currentLocation||'']||'loc-none';
+    let statusBadge, statusLabel;
+    if (c.first && c.second) { statusBadge='badge-ok'; statusLabel='Complete'; }
+    else if (c.first) { statusBadge='badge-warn'; statusLabel='1 Count'; }
+    else { statusBadge='loc-none'; statusLabel='Pending'; }
+    const variance = c.second ? (+c.second.qty||0)-bookQty : null;
+    const varBadge = variance===null ? '—' : variance===0
+      ? `<span class="badge badge-var-ok">±0</span>`
+      : Math.abs(variance)<=3
+        ? `<span class="badge badge-var-close">${variance>0?'+':''}${variance}</span>`
+        : `<span class="badge badge-var-off">${variance>0?'+':''}${variance}</span>`;
+    return `<tr>
+      <td><div class="cell-name">${esc(item.name)}</div><div class="cell-sub">${esc(item.sku||'—')}</div></td>
+      <td>${item.currentLocation?`<span class="badge ${locCls}">${esc(item.currentLocation)}</span>`:'—'}</td>
+      <td class="cell-mono">${bookQty}</td>
+      <td class="cell-mono">${c.first ? `<strong>${c.first.qty}</strong>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="cell-mono" style="font-size:11px;">${c.first ? esc(c.first.user||'—') : '—'}</td>
+      <td class="cell-mono">${c.second ? `<strong>${c.second.qty}</strong>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="cell-mono" style="font-size:11px;">${c.second ? esc(c.second.user||'—') : '—'}</td>
+      <td>${varBadge}</td>
+      <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+      <td><button class="btn-icon" onclick="openCountModal('${item.id}')" title="Enter Count">✏</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── MOVEMENTS ─────────────────────────────────────────────────
+function openMoveModal() {
+  populateMoveItemSelect();
+  populateMoveUserSelect();
+  document.getElementById('mov-item').value = '';
+  document.getElementById('mov-from').value = '';
+  document.getElementById('mov-to').value = '';
+  document.getElementById('mov-notes').value = '';
+  openModal('moveModal');
+}
+function openMoveModalFor(itemId) {
+  populateMoveItemSelect();
+  populateMoveUserSelect();
+  document.getElementById('mov-item').value = itemId;
+  onMovItemChange();
+  document.getElementById('mov-to').value = '';
+  document.getElementById('mov-notes').value = '';
+  openModal('moveModal');
+}
+function populateMoveItemSelect() {
+  document.getElementById('mov-item').innerHTML = '<option value="">— Select item —</option>' +
+    state.items.map(i=>`<option value="${i.id}">${esc(i.name)}${i.sku?' ('+esc(i.sku)+')':''}</option>`).join('');
+}
+function populateMoveUserSelect() {
+  document.getElementById('mov-user').innerHTML = '<option value="">— Select —</option>' +
+    state.users.map(u=>`<option value="${esc(u)}"${u===state.currentUser?' selected':''}>${esc(u)}</option>`).join('');
+}
+function onMovItemChange() {
+  const id = document.getElementById('mov-item').value;
+  const item = id ? state.items.find(i=>i.id===id) : null;
+  document.getElementById('mov-from').value = item?.currentLocation||'Unassigned';
+}
+function saveMovement() {
+  const itemId = document.getElementById('mov-item').value;
+  const toLoc = document.getElementById('mov-to').value;
+  const movedBy = document.getElementById('mov-user').value;
+  if (!itemId) { toast('Select an item.'); return; }
+  if (!toLoc) { toast('Select destination.'); return; }
+  const item = state.items.find(i=>i.id===itemId);
+  const fromLoc = item.currentLocation||'Unassigned';
+  if (fromLoc===toLoc) { toast('Item is already at that location.'); return; }
+  state.movements.unshift({
+    id: genId(), itemId, fromLoc, toLoc,
+    movedBy: movedBy||state.currentUser, ts: Date.now(),
+    notes: document.getElementById('mov-notes').value.trim()
+  });
+  item.currentLocation = toLoc;
+  save(); closeModal('moveModal'); fullRefresh(); toast(`Moved to ${toLoc}.`);
+}
+
+function renderMovements() {
+  const q = document.getElementById('movSearch').value.toLowerCase();
+  const loc = document.getElementById('movLocFilter').value;
+  let movs = state.movements.filter(m => {
+    const item = state.items.find(i=>i.id===m.itemId);
+    if (!item) return false;
+    if (q && !`${item.name} ${m.fromLoc} ${m.toLoc} ${m.movedBy}`.toLowerCase().includes(q)) return false;
+    if (loc && m.fromLoc!==loc && m.toLoc!==loc) return false;
+    return true;
+  });
+  const el = document.getElementById('movList');
+  if (!movs.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔄</div><p>No movements logged yet.</p><small>Use "+ Log Movement" or move items from the inventory tab.</small></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="movement-log">${movs.map((m,idx) => {
+    const item = state.items.find(i=>i.id===m.itemId);
+    const fromCls = LOC_CLASS[m.fromLoc||'']||'loc-none';
+    const toCls = LOC_CLASS[m.toLoc||'']||'loc-none';
+    return `<div class="move-item">
+      <div class="move-timeline">
+        <div class="move-dot"></div>
+        ${idx<movs.length-1?'<div class="move-line"></div>':''}
+      </div>
+      <div class="move-content">
+        <div class="move-header">
+          <span class="move-item-name">${esc(item?.name||'Unknown Item')}</span>
+          ${item?.sku?`<span class="badge" style="background:var(--surface2);color:var(--muted)">${esc(item.sku)}</span>`:''}
+        </div>
+        <div class="move-arrow">
+          <span class="badge ${fromCls}">${esc(m.fromLoc||'Unassigned')}</span>
+          <span class="arrow">→</span>
+          <span class="badge ${toCls}">${esc(m.toLoc)}</span>
+        </div>
+        <div class="move-meta" style="margin-top:5px;">By <strong>${esc(m.movedBy||'Unknown')}</strong> · ${fmtDate(m.ts)}</div>
+        ${m.notes?`<div class="move-note">${esc(m.notes)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ─── REPORT ────────────────────────────────────────────────────
+function buildReport() {
+  const totalVal = state.items.reduce((s,i) => s+(+i.quantity||0)*(+i.unitPrice||0), 0);
+  const totalUnits = state.items.reduce((s,i) => s+(+i.quantity||0), 0);
+  const counted1 = Object.values(state.counts).filter(c=>c.first).length;
+  const counted2 = Object.values(state.counts).filter(c=>c.second).length;
+  const variances = state.items.filter(i => {
+    const c = state.counts[i.id];
+    return c?.second && Math.abs((+c.second.qty||0)-(+i.quantity||0))>0;
+  });
+
+  // By category
+  const catMap = {};
+  state.items.forEach(i => {
+    const cat = i.category||'Uncategorized';
+    catMap[cat] = (catMap[cat]||0) + (+i.quantity||0)*(+i.unitPrice||0);
+  });
+  const catSorted = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const catMax = catSorted[0]?.[1]||1;
+
+  // By location
+  const locMap = {};
+  state.items.forEach(i => {
+    const l = i.currentLocation||'Unassigned';
+    if (!locMap[l]) locMap[l] = { items:0, units:0, val:0 };
+    locMap[l].items++;
+    locMap[l].units += +i.quantity||0;
+    locMap[l].val += (+i.quantity||0)*(+i.unitPrice||0);
+  });
+
+  document.getElementById('reportContent').innerHTML = `
+    <div class="report-grid">
+      ${[
+        ['Total SKUs', state.items.length, ''],
+        ['Total Units', totalUnits.toLocaleString(), ''],
+        ['Inventory Value', fmt(totalVal), 'green'],
+        ['1st Counts Done', `${counted1} / ${state.items.length}`, 'accent'],
+        ['2nd Counts Done', `${counted2} / ${state.items.length}`, 'accent'],
+        ['Count Variances', variances.length, variances.length>0?'warn':''],
+      ].map(([l,v,c])=>`<div class="report-card"><div class="rc-label">${l}</div><div class="rc-val ${c}">${v}</div></div>`).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+      <div>
+        <div class="section-title">Value by Category</div>
+        ${catSorted.map(([cat,val])=>`<div class="cat-row"><div class="cat-name">${esc(cat)}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${(val/catMax*100).toFixed(1)}%"></div></div><div class="cat-val">${fmt(val)}</div></div>`).join('') || '<div style="color:var(--muted);font-size:13px;">No data.</div>'}
+      </div>
+      <div>
+        <div class="section-title">By Location</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;"><th style="padding:6px 8px;text-align:left;">Location</th><th style="padding:6px 8px;text-align:right;">Items</th><th style="padding:6px 8px;text-align:right;">Units</th><th style="padding:6px 8px;text-align:right;">Value</th></tr>
+          ${Object.entries(locMap).sort((a,b)=>b[1].val-a[1].val).map(([loc,d])=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;"><span class="badge ${LOC_CLASS[loc]||'loc-none'}">${esc(loc)}</span></td><td class="cell-mono" style="padding:7px 8px;text-align:right;">${d.items}</td><td class="cell-mono" style="padding:7px 8px;text-align:right;">${d.units.toLocaleString()}</td><td class="cell-value" style="padding:7px 8px;text-align:right;">${fmt(d.val)}</td></tr>`).join('')}
+        </table>
+      </div>
+    </div>
+
+    ${variances.length ? `
+    <div class="section-title">Count Variances</div>
+    <div class="table-container" style="margin-bottom:24px;">
+      <div class="table-scroll">
+        <table><thead><tr>
+          <th>Item</th><th>Location</th><th>Book Qty</th><th>2nd Count</th><th>Variance</th><th>Counted By</th>
+        </tr></thead>
+        <tbody>${variances.map(item => {
+          const c = state.counts[item.id];
+          const v = (+c.second.qty||0)-(+item.quantity||0);
+          const locCls = LOC_CLASS[item.currentLocation||'']||'loc-none';
+          return `<tr>
+            <td class="cell-name">${esc(item.name)}</td>
+            <td>${item.currentLocation?`<span class="badge ${locCls}">${esc(item.currentLocation)}</span>`:'—'}</td>
+            <td class="cell-mono">${item.quantity}</td>
+            <td class="cell-mono">${c.second.qty}</td>
+            <td><span class="badge ${Math.abs(v)<=3?'badge-var-close':'badge-var-off'}">${v>0?'+':''}${v}</span></td>
+            <td class="cell-mono" style="font-size:11px;">${esc(c.second.user||'—')}</td>
+          </tr>`;
+        }).join('')}</tbody></table>
+      </div>
+    </div>` : ''}
+
+    <div class="section-title">Counter Activity</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+      ${state.users.map(u => {
+        const first = Object.values(state.counts).filter(c=>c.first?.user===u).length;
+        const second = Object.values(state.counts).filter(c=>c.second?.user===u).length;
+        const moves = state.movements.filter(m=>m.movedBy===u).length;
+        return `<div class="report-card" style="min-width:160px;"><div class="rc-label">${esc(u)}</div><div style="font-size:12px;margin-top:6px;color:var(--muted);line-height:1.8;font-family:'IBM Plex Mono',monospace;">1st counts: <strong style="color:var(--text)">${first}</strong><br>2nd counts: <strong style="color:var(--text)">${second}</strong><br>Movements: <strong style="color:var(--text)">${moves}</strong></div></div>`;
+      }).join('') || '<div style="color:var(--muted);font-size:13px;">No activity yet.</div>'}
+    </div>
+  `;
+}
+
+function printReport() {
+  buildReport();
+  setTimeout(() => window.print(), 100);
+}
+
+// ─── IMAGE HANDLING ────────────────────────────────────────────
+function previewImage(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { toast('Image too large — max 3MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('imgPreview');
+    const ph = document.getElementById('imgPlaceholder');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    ph.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearImage() {
+  document.getElementById('imgPreview').src = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  document.getElementById('f-image').value = '';
+}
+
+// ─── COUNT SHEET ───────────────────────────────────────────────
+function buildCountSheet() {
+  const loc = document.getElementById('cs-locFilter').value;
+  const cat = document.getElementById('cs-catFilter').value;
+  const showImgs = document.getElementById('cs-showImages').checked;
+
+  // Update cat filter options
+  const catSel = document.getElementById('cs-catFilter');
+  const curCat = catSel.value;
+  const cats = [...new Set(state.items.map(i=>i.category).filter(Boolean))].sort();
+  catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option>${esc(c)}</option>`).join('');
+  catSel.value = curCat;
+
+  let items = state.items.filter(i => {
+    if (loc && i.currentLocation !== loc) return false;
+    if (cat && i.category !== cat) return false;
+    return true;
+  });
+  // Group by location then category
+  const groups = {};
+  items.forEach(item => {
+    const groupKey = (item.currentLocation||'Unassigned') + ' › ' + (item.category||'Uncategorized');
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(item);
+  });
+
+  const date = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const locLabel = loc || 'All Locations';
+  const catLabel = cat || 'All Categories';
+
+  let html = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;" id="countSheetContent">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--text);">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">YEAR-END PHYSICAL COUNT SHEET</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace;">${locLabel} · ${catLabel} · ${date}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--muted);">
+          <div>${items.length} items</div>
+          <div style="margin-top:4px;">Counter: _________________</div>
+        </div>
+      </div>`;
+
+  if (!items.length) {
+    html += `<div class="empty-state"><div class="empty-icon">📋</div><p>No items match these filters.</p></div>`;
+  } else {
+    Object.entries(groups).sort().forEach(([groupKey, groupItems]) => {
+      html += `
+        <div style="margin-bottom:24px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);background:var(--surface2);padding:6px 12px;border-radius:4px;margin-bottom:10px;border-left:3px solid var(--accent);">
+            ${esc(groupKey)}
+          </div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--surface2);">
+                ${showImgs ? '<th style="width:60px;padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">Photo</th>' : ''}
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">Item Name</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">SKU / UPC</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">Style</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">Color</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:left;color:var(--muted);">Size</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:center;color:var(--muted);width:70px;">Book Qty</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:center;color:var(--muted);width:90px;">1st Count</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:center;color:var(--muted);width:90px;">2nd Count</th>
+                <th style="padding:7px 10px;border:1px solid var(--border);font-size:10px;text-align:center;color:var(--muted);width:70px;">Variance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${groupItems.map((item,idx) => {
+                const c = state.counts[item.id]||{};
+                const v = c.second ? (+c.second.qty||0)-(+item.quantity||0) : null;
+                const rowBg = idx%2===0 ? '' : 'background:#faf9f7;';
+                return `<tr style="${rowBg}">
+                  ${showImgs ? `<td style="padding:6px 10px;border:1px solid var(--border);text-align:center;">
+                    ${item.image ? `<img src="${item.image}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;"/>` : '<div style="width:48px;height:48px;border:1px dashed #ccc;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;opacity:.3;">📦</div>'}
+                  </td>` : ''}
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:12px;font-weight:600;">${esc(item.name)}${item.notes?`<br/><span style="font-size:10px;color:#888;font-weight:400;">${esc(item.notes)}</span>`:''}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:11px;font-family:monospace;">${esc(item.sku||'—')}${item.upc?`<br/>${esc(item.upc)}`:''}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:11px;font-family:monospace;">${esc(item.styleNum||'—')}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:11px;">${esc(item.color||'—')}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:11px;">${esc(item.size||'—')}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);font-size:12px;text-align:center;font-family:monospace;font-weight:600;">${item.quantity}</td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);text-align:center;font-family:monospace;font-size:12px;">
+                    ${c.first ? `<strong>${c.first.qty}</strong><br/><span style="font-size:9px;color:#888;">${esc(c.first.user||'')}</span>` : '<div style="height:20px;border-bottom:1px solid #bbb;margin:0 8px;"></div>'}
+                  </td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);text-align:center;font-family:monospace;font-size:12px;">
+                    ${c.second ? `<strong>${c.second.qty}</strong><br/><span style="font-size:9px;color:#888;">${esc(c.second.user||'')}</span>` : '<div style="height:20px;border-bottom:1px solid #bbb;margin:0 8px;"></div>'}
+                  </td>
+                  <td style="padding:7px 10px;border:1px solid var(--border);text-align:center;font-family:monospace;font-size:12px;font-weight:700;${v===null?'':v===0?'color:#15803d;':Math.abs(v)<=3?'color:#b45309;':'color:#dc2626;'}">
+                    ${v===null ? '' : v===0 ? '✓' : (v>0?'+':'')+v}
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    });
+    html += `
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--muted);">
+        <div>Signature: ____________________________________________</div>
+        <div>Date Completed: _____________________</div>
+      </div>`;
+  }
+  html += '</div>';
+  document.getElementById('countSheetPreview').innerHTML = html;
+}
+
+function printCountSheet() {
+  buildCountSheet();
+  const content = document.getElementById('countSheetContent');
+  if (!content) return;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Count Sheet</title>
+  <style>
+    body { font-family: sans-serif; padding: 24px; color: #111; background: white; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { border:1px solid #ddd; padding:6px 10px; font-size:12px; }
+    th { background:#f5f5f5; font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+    img { width:48px; height:48px; object-fit:cover; border-radius:4px; }
+    @media print { @page { margin: 0.5in; } }
+  </style>
+  </head><body>${content.innerHTML}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 300);
+}
+
+// ─── SHOW TAB (updated to build count sheet) ───────────────────
+
+function exportData() {
+  download('stockroom_'+new Date().toISOString().slice(0,10)+'.json', JSON.stringify(state, null, 2), 'application/json');
+  toast('Data exported.');
+}
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      state = { ...state, ...parsed };
+      save(); fullRefresh(); toast(`Data imported.`);
+    } catch { toast('Import failed.'); }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+function exportCSV() {
+  const headers = ['name','sku','upc','styleNum','color','size','category','currentLocation','quantity','unitPrice','threshold','notes'];
+  const rows = [headers.join(','), ...state.items.map(i => headers.map(h=>JSON.stringify(i[h]??'')).join(','))];
+  download('inventory_'+new Date().toISOString().slice(0,10)+'.csv', rows.join('\n'), 'text/csv');
+  toast('CSV exported.');
+}
+function download(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
+}
+
+// ─── MODAL HELPERS ─────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(el=>el.classList.remove('open')); });
+
+// ─── UTILS ─────────────────────────────────────────────────────
+function genId() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function fmt(n) { return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(ts) { return ts ? new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—'; }
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+
+// ─── BARCODE SCANNER ───────────────────────────────────────
+let scannerStream = null;
+let scannerPurpose = 'inventory';
+let zxingReader = null;
+let activeScanTab = 'camera';
+
+// USB scanner debounce: scanners send chars fast then Enter
+let usbBuffer = '';
+let usbDebounceTimer = null;
+function handleUsbInput(val) {
+  clearTimeout(usbDebounceTimer);
+  usbBuffer = val;
+  usbDebounceTimer = setTimeout(() => {
+    if (usbBuffer.trim().length > 2) {
+      lookupBarcode(usbBuffer.trim());
+      document.getElementById('usbInput').value = '';
+      usbBuffer = '';
+    }
+  }, 80); // scanners finish in <80ms; typing is slower
+}
+
+function switchScanTab(tab) {
+  activeScanTab = tab;
+  ['camera','usb','manual'].forEach(t => {
+    document.getElementById('stab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('spanel-'+t).classList.toggle('active', t===tab);
+  });
+  document.getElementById('scanResult').style.display = 'none';
+  if (tab === 'camera') {
+    startCamera();
+  } else {
+    stopCamera();
+    if (tab === 'usb') {
+      setTimeout(() => document.getElementById('usbInput').focus(), 100);
+    }
+  }
+}
+
+function openScanner(purpose) {
+  scannerPurpose = purpose || 'inventory';
+  document.getElementById('scanPurposeLabel').textContent =
+    purpose === 'count' ? 'Scan barcode to open Count entry…' : 'Scan barcode to find item in inventory…';
+  document.getElementById('scanResult').style.display = 'none';
+  document.getElementById('scanManualInput').value = '';
+  document.getElementById('usbInput').value = '';
+  // reset to camera tab
+  switchScanTab('camera');
+  openModal('scannerModal');
+}
+
+function closeScanner() {
+  stopCamera();
+  closeModal('scannerModal');
+}
+
+async function loadZXing() {
+  if (zxingReader) return zxingReader;
+  return new Promise((resolve, reject) => {
+    if (typeof ZXing !== 'undefined') { 
+      zxingReader = new ZXing.BrowserMultiFormatReader();
+      resolve(zxingReader); return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.19.1/zxing.min.js';
+    s.onload = () => {
+      zxingReader = new ZXing.BrowserMultiFormatReader();
+      resolve(zxingReader);
+    };
+    s.onerror = () => reject(new Error('ZXing failed to load'));
+    document.head.appendChild(s);
+  });
+}
+
+async function startCamera() {
+  const video = document.getElementById('scannerVideo');
+  const status = document.getElementById('cameraStatus');
+  status.textContent = 'Requesting camera access…';
+  try {
+    // Try ZXing first for best compatibility
+    const reader = await loadZXing();
+    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+    // Prefer rear-facing camera on mobile
+    const deviceId = devices.length > 1
+      ? (devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length-1]).deviceId
+      : (devices[0] || undefined)?.deviceId;
+
+    status.textContent = 'Camera active — aim at barcode…';
+    await reader.decodeFromVideoDevice(deviceId, 'scannerVideo', (result, err) => {
+      if (result) {
+        const code = result.getText();
+        reader.reset();
+        stopCamera();
+        lookupBarcode(code);
+      }
+    });
+    scannerStream = true; // flag that ZXing is active
+  } catch(err) {
+    // Fallback: try raw getUserMedia
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      });
+      video.srcObject = scannerStream;
+      await video.play();
+      status.textContent = 'Camera active (basic mode) — use USB or Manual tab for best results.';
+    } catch(e) {
+      status.textContent = '';
+      showScanResult('error',
+        '⚠️ <strong>Camera access was denied.</strong><br>' +
+        'To use camera scanning: open this file via a local web server (e.g. VS Code Live Server), or use one of the other scan methods below.<br><br>' +
+        '👉 Switch to the <strong>USB / Bluetooth Scanner</strong> or <strong>Manual Entry</strong> tab above.');
+    }
+  }
+}
+
+function stopCamera() {
+  if (zxingReader && typeof zxingReader.reset === 'function') {
+    try { zxingReader.reset(); } catch(e) {}
+  }
+  if (scannerStream && scannerStream !== true) {
+    scannerStream.getTracks().forEach(t => t.stop());
+  }
+  scannerStream = null;
+  const video = document.getElementById('scannerVideo');
+  if (video) video.srcObject = null;
+  const status = document.getElementById('cameraStatus');
+  if (status) status.textContent = '';
+}
+
+function lookupBarcode(code) {
+  if (!code) { showScanResult('error', 'Please enter a barcode value.'); return; }
+
+  const match = state.items.find(item =>
+    (item.upc   && item.upc.trim()      === code) ||
+    (item.sku   && item.sku.trim()      === code) ||
+    (item.styleNum && item.styleNum.trim() === code)
+  );
+
+  if (match) {
+    if (scannerPurpose === 'count') {
+      showScanResult('found', `✓ Found: <strong>${esc(match.name)}</strong> — opening count entry…`);
+      setTimeout(() => {
+        closeScanner();
+        showTab('counts');
+        openCountModal(match.id);
+      }, 900);
+    } else {
+      showScanResult('found', `✓ Found: <strong>${esc(match.name)}</strong> — SKU: ${esc(match.sku||'—')} · ${esc(match.currentLocation||'—')}`);
+      setTimeout(() => {
+        closeScanner();
+        showTab('inventory');
+        document.getElementById('invSearch').value = match.name;
+        renderInventory();
+        setTimeout(() => {
+          const row = document.querySelector(`tr[data-id="${match.id}"]`);
+          if (row) {
+            row.style.outline = '2px solid var(--accent)';
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => row.style.outline = '', 2500);
+          }
+        }, 200);
+      }, 1000);
+    }
+  } else {
+    showScanResult('notfound',
+      `⚠ No item found for: <strong>${esc(code)}</strong><br>` +
+      `<span style="font-size:12px;">Make sure the UPC, SKU, or Style Number field on the item matches exactly.</span>`);
+  }
+}
+
+function showScanResult(type, html) {
+  const el = document.getElementById('scanResult');
+  el.className = type;
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+// ─── SAMPLE DATA (only if empty) ───────────────────────────────
+if (!state.items.length) {
+  const now = Date.now();
+  state.items = [
+    { id:'s1', name:'Ceramic Coffee Mug', sku:'MUG-001', category:'Drinkware', quantity:84, unitPrice:12.99, currentLocation:'Gift Shop', threshold:15, notes:'' },
+    { id:'s2', name:'Keychain Set (Assorted)', sku:'KEY-010', category:'Accessories', quantity:12, unitPrice:4.50, currentLocation:'Gift Shop', threshold:20, notes:'Reorder soon' },
+    { id:'s3', name:'Hardcover Trail Guide', sku:'BK-042', category:'Books', quantity:38, unitPrice:22.00, currentLocation:'Backroom', threshold:10, notes:'' },
+    { id:'s4', name:'Fleece Blanket (Logo)', sku:'BLK-005', category:'Apparel', quantity:5, unitPrice:34.00, currentLocation:'Conex', threshold:10, notes:'Low — check conex' },
+    { id:'s5', name:'Water Bottle 32oz', sku:'WB-032', category:'Drinkware', quantity:60, unitPrice:18.50, currentLocation:'Tent', threshold:10, notes:'' },
+    { id:'s6', name:'Tote Bag Canvas', sku:'TOT-003', category:'Accessories', quantity:200, unitPrice:9.00, currentLocation:'Offsite Storage', threshold:30, notes:'' },
+  ];
+  state.movements = [
+    { id:'m1', itemId:'s4', fromLoc:'Gift Shop', toLoc:'Conex', movedBy:'Sample User', ts: now-86400000*3, notes:'Moved for winter storage' },
+    { id:'m2', itemId:'s5', fromLoc:'Backroom', toLoc:'Tent', movedBy:'Sample User', ts: now-86400000*1, notes:'Seasonal display setup' },
+    { id:'m3', itemId:'s6', fromLoc:'Backroom', toLoc:'Offsite Storage', movedBy:'Sample User', ts: now-86400000*2, notes:'Overflow stock' },
+  ];
+}
+</script>
+</body>
+</html>
